@@ -36,7 +36,7 @@
 </script>
 
 <script>
-const { useState, useEffect, useContext, createContext } = React;
+const { useState, useEffect, useContext, createContext, createElement: h } = React;
 
 function useLocalStorage(key, initial) {
   const [value, setValue] = useState(() => {
@@ -79,7 +79,6 @@ const THEMES = {
 };
 
 const ThemeCtx = createContext(THEMES.dark);
-const useT = () => useContext(ThemeCtx);
 
 const NAV = [
   { id: "dashboard", label: "Dashboard" },
@@ -111,85 +110,83 @@ function App() {
     setTasks(tasks.filter(t => t.id !== id));
   };
 
-  return (
-    <ThemeCtx.Provider value={theme}>
-      <div style={{ background: theme.bg, color: theme.text, minHeight: "100vh", display: "flex", fontFamily: "Inter, sans-serif" }}>
-        
-        {/* Sidebar */}
-        <div style={{ width: 240, borderRight: `1px solid ${theme.border}`, padding: 20, display: "flex", flexDirection: "column", gap: 10 }}>
-          <h2 style={{ fontFamily: "Space Grotesk", fontSize: 18, color: theme.accent, margin: "0 0 20px 0" }}>⚡ Focus To-Do</h2>
-          {NAV.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              style={{
-                textAlign: "left",
-                padding: "10px 14px",
-                borderRadius: 8,
-                background: activeTab === item.id ? theme.accentDim : "transparent",
-                color: activeTab === item.id ? theme.accent : theme.textMuted,
-                border: "none",
-                fontWeight: 600,
-                cursor: "pointer"
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
-          
-          <button 
-            onClick={() => setThemeMode(themeMode === "dark" ? "light" : "dark")} 
-            style={{ marginTop: "auto", background: theme.surface2, border: `1px solid ${theme.border}`, color: theme.text, padding: 10, borderRadius: 8, cursor: "pointer" }}
-          >
-            Toggle {themeMode === "dark" ? "☀️ Light" : "🌙 Dark"}
-          </button>
-        </div>
+  return h(ThemeCtx.Provider, { value: theme },
+    h("div", { style: { background: theme.bg, color: theme.text, minHeight: "100vh", display: "flex", fontFamily: "Inter, sans-serif" } },
+      
+      /* Sidebar */
+      h("div", { style: { width: 240, borderRight: `1px solid ${theme.border}`, padding: 20, display: "flex", flexDirection: "column", gap: 10 } },
+        h("h2", { style: { fontFamily: "Space Grotesk", fontSize: 18, color: theme.accent, margin: "0 0 20px 0" } }, "⚡ Focus To-Do"),
+        NAV.map(item => 
+          h("button", {
+            key: item.id,
+            onClick: () => setActiveTab(item.id),
+            style: {
+              textAlign: "left",
+              padding: "10px 14px",
+              borderRadius: 8,
+              background: activeTab === item.id ? theme.accentDim : "transparent",
+              color: activeTab === item.id ? theme.accent : theme.textMuted,
+              border: "none",
+              fontWeight: 600,
+              cursor: "pointer"
+            }
+          }, item.label)
+        ),
+        h("button", {
+          onClick: () => setThemeMode(themeMode === "dark" ? "light" : "dark"),
+          style: { marginTop: "auto", background: theme.surface2, border: `1px solid ${theme.border}`, color: theme.text, padding: 10, borderRadius: 8, cursor: "pointer" }
+        }, `Toggle ${themeMode === "dark" ? "☀️ Light" : "🌙 Dark"}`)
+      ),
 
-        {/* Main Content Area */}
-        <div style={{ flex: 1, padding: 30 }}>
-          <h1 style={{ fontFamily: "Space Grotesk", fontSize: 24, margin: "0 0 20px 0" }}>
-            {NAV.find(n => n.id === activeTab)?.label}
-          </h1>
+      /* Main Content Area */
+      h("div", { style: { flex: 1, padding: 30 } },
+        h("h1", { style: { fontFamily: "Space Grotesk", fontSize: 24, margin: "0 0 20px 0" } },
+          NAV.find(n => n.id === activeTab)?.label
+        ),
 
-          {/* Quick Task Input */}
-          <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-            <input 
-              type="text" 
-              value={newTask} 
-              onChange={(e) => setNewTask(e.target.value)} 
-              onKeyDown={(e) => e.key === "Enter" && addTask()}
-              placeholder="Add a new task..." 
-              style={{ flex: 1, padding: "12px 16px", borderRadius: 8, background: theme.surface, border: `1px solid ${theme.border}`, color: theme.text, outline: "none" }}
-            />
-            <button onClick={addTask} style={{ background: theme.accent, color: "#fff", border: "none", padding: "0 20px", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}>Add</button>
-          </div>
+        /* Quick Task Input */
+        h("div", { style: { display: "flex", gap: 10, marginBottom: 20 } },
+          h("input", {
+            type: "text",
+            value: newTask,
+            onChange: (e) => setNewTask(e.target.value),
+            onKeyDown: (e) => e.key === "Enter" && addTask(),
+            placeholder: "Add a new task...",
+            style: { flex: 1, padding: "12px 16px", borderRadius: 8, background: theme.surface, border: `1px solid ${theme.border}`, color: theme.text, outline: "none" }
+          }),
+          h("button", {
+            onClick: addTask,
+            style: { background: theme.accent, color: "#fff", border: "none", padding: "0 20px", borderRadius: 8, fontWeight: 600, cursor: "pointer" }
+          }, "Add")
+        ),
 
-          {/* Task List */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {tasks.length === 0 ? (
-              <p style={{ color: theme.textMuted, fontStyle: "italic" }}>No tasks yet! Add one above.</p>
-            ) : (
-              tasks.map(t => (
-                <div key={t.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: theme.surface, padding: "12px 16px", borderRadius: 8, border: `1px solid ${theme.border}` }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <input type="checkbox" checked={t.done} onChange={() => toggleTask(t.id)} style={{ cursor: "pointer" }} />
-                    <span style={{ textDecoration: t.done ? "line-through" : "none", color: t.done ? theme.textMuted : theme.text }}>{t.text}</span>
-                  </div>
-                  <button onClick={() => deleteTask(t.id)} style={{ background: "transparent", border: "none", color: "#F87171", cursor: "pointer" }}>✕</button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-      </div>
-    </ThemeCtx.Provider>
+        /* Task List */
+        h("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+          tasks.length === 0 ? 
+            h("p", { style: { color: theme.textMuted, fontStyle: "italic" } }, "No tasks yet! Add one above.") :
+            tasks.map(t => 
+              h("div", { key: t.id, style: { display: "flex", alignItems: "center", justifyContent: "space-between", background: theme.surface, padding: "12px 16px", borderRadius: 8, border: `1px solid ${theme.border}` } },
+                h("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
+                  h("input", { type: "checkbox", checked: t.done, onChange: () => toggleTask(t.id), style: { cursor: "pointer" } }),
+                  h("span", { style: { textDecoration: t.done ? "line-through" : "none", color: t.done ? theme.textMuted : theme.text } }, t.text)
+                ),
+                h("button", { onClick: () => deleteTask(t.id), style: { background: "transparent", border: "none", color: "#F87171", cursor: "pointer" } }, "✕")
+              )
+            )
+        )
+      )
+    )
   );
 }
 
 // Render React App
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(React.createElement(App));
+root.render(h(App));
 </script>
 </body>
 </html>
+  
+
+          
+         
+          
