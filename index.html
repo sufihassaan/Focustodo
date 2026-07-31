@@ -126,6 +126,16 @@ function Icon({ name, size = 16, color = "currentColor", fill = "none" }) {
 }
 const uid = () => Math.random().toString(36).slice(2, 10);
 const todayStr = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+function seedHabitHistory(rate) {
+  const hist = {};
+  const now = /* @__PURE__ */ new Date();
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    hist[d.toISOString().slice(0, 10)] = Math.random() < rate;
+  }
+  return hist;
+}
 function currentStreak(history) {
   let streak = 0;
   const d = /* @__PURE__ */ new Date();
@@ -264,6 +274,790 @@ const NAV = [
   { id: "journal", label: "Journal", icon: "book" },
   { id: "analytics", label: "Analytics", icon: "bar" },
   { id: "ai", label: "AI Assistant", icon: "bot" }
+];
+const SIDEBAR_FULL = 220;
+const SIDEBAR_COLLAPSED = 72;
+function Sidebar({ view, setView, theme, setTheme, isMobile, collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
+  const t = useT();
+  const panelRef = useRef(null);
+  useEffect(() => {
+    if (!isMobile || !mobileOpen) return;
+    const onDocClick = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target)) setMobileOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("touchstart", onDocClick);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("touchstart", onDocClick);
+    };
+  }, [isMobile, mobileOpen, setMobileOpen]);
+  const showLabels = isMobile ? true : !collapsed;
+  const width = isMobile ? 240 : collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_FULL;
+  const panel = /* @__PURE__ */ React.createElement("div", { ref: panelRef, style: {
+    width,
+    flexShrink: 0,
+    background: t.surface,
+    borderRight: isMobile ? "none" : `1px solid ${t.border}`,
+    display: "flex",
+    flexDirection: "column",
+    padding: "18px 12px",
+    gap: 4,
+    height: "100%",
+    transition: isMobile ? "none" : "width .2s ease",
+    overflow: "hidden"
+  } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, padding: showLabels ? "0 6px 20px" : "0 0 20px", justifyContent: showLabels ? "space-between" : "center" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 30, height: 30, borderRadius: 8, background: t.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ React.createElement(Icon, { name: "zap", size: 16, color: "#fff", fill: "#fff" })), showLabels && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "Space Grotesk", fontWeight: 700, fontSize: 15, color: t.text, letterSpacing: -0.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "Focus To-Do")), isMobile ? /* @__PURE__ */ React.createElement("button", { onClick: () => setMobileOpen(false), title: "Close menu", style: { background: "none", border: "none", color: t.textMuted, cursor: "pointer", display: "flex", flexShrink: 0 } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 18 })) : !collapsed && /* @__PURE__ */ React.createElement("button", { onClick: () => setCollapsed(true), title: "Collapse sidebar", style: { background: "none", border: "none", color: t.textMuted, cursor: "pointer", display: "flex", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { display: "flex", transform: "rotate(180deg)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "chevron", size: 16, color: t.textMuted })))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, overflowY: "auto", minHeight: 0, flex: 1 } }, NAV.map((item) => {
+    const active = view === item.id;
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        key: item.id,
+        title: showLabels ? void 0 : item.label,
+        onClick: () => {
+          setView(item.id);
+          if (isMobile) setMobileOpen(false);
+        },
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: showLabels ? "9px 10px" : "9px 0",
+          justifyContent: showLabels ? "flex-start" : "center",
+          borderRadius: 10,
+          border: "none",
+          flexShrink: 0,
+          background: active ? t.accentDim : "transparent",
+          color: active ? t.accent : t.textMuted,
+          cursor: "pointer",
+          fontFamily: "Inter",
+          fontWeight: active ? 600 : 500,
+          fontSize: 13.5,
+          textAlign: "left",
+          width: "100%"
+        }
+      },
+      /* @__PURE__ */ React.createElement(Icon, { name: item.icon, size: 17, color: active ? t.accent : t.textMuted }),
+      showLabels && /* @__PURE__ */ React.createElement("span", { style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, item.label)
+    );
+  })), !isMobile && collapsed && /* @__PURE__ */ React.createElement("button", { onClick: () => setCollapsed(false), title: "Expand sidebar", style: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "9px 0",
+    borderRadius: 10,
+    border: `1px solid ${t.border}`,
+    background: "transparent",
+    color: t.textMuted,
+    cursor: "pointer",
+    marginBottom: 8
+  } }, /* @__PURE__ */ React.createElement(Icon, { name: "chevron", size: 15 })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, padding: showLabels ? "0 6px" : "0", justifyContent: showLabels ? "flex-start" : "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(IconBtn, { icon: "moon", active: theme === "dark", onClick: () => setTheme("dark"), title: "Dark theme" }), /* @__PURE__ */ React.createElement(IconBtn, { icon: "sun", active: theme === "light", onClick: () => setTheme("light"), title: "Light theme" })));
+  if (!isMobile) return panel;
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { onClick: () => setMobileOpen(false), style: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.5)",
+    zIndex: 20,
+    opacity: mobileOpen ? 1 : 0,
+    pointerEvents: mobileOpen ? "auto" : "none",
+    transition: "opacity .2s ease"
+  } }), /* @__PURE__ */ React.createElement("div", { style: {
+    position: "fixed",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 21,
+    transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
+    transition: "transform .22s ease",
+    boxShadow: mobileOpen ? "4px 0 24px rgba(0,0,0,0.3)" : "none"
+  } }, panel));
+}
+function Dashboard({ state, actions, setView }) {
+  const t = useT();
+  const mits = state.mits.filter((m) => m.mit);
+  const doneCount = mits.filter((m) => m.done).length;
+  const streakSum = state.habits.reduce((s, h) => s + currentStreak(h.history), 0);
+  const focusMins = state.sessions.reduce((s, ss) => s + ss.minutes, 0);
+  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { style: { fontFamily: "Space Grotesk", fontSize: 24, fontWeight: 700, color: t.text, margin: 0 } }, "Good ", timeOfDay(), ". Ship something today."), /* @__PURE__ */ React.createElement("p", { style: { fontFamily: "Inter", color: t.textMuted, fontSize: 13.5, marginTop: 4 } }, (/* @__PURE__ */ new Date()).toLocaleDateString(void 0, { weekday: "long", month: "long", day: "numeric" }))), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 14 } }, /* @__PURE__ */ React.createElement(StatCard, { label: "Focus time today", value: `${(focusMins / 60).toFixed(1)}h`, icon: "clock", color: t.accent, bg: t.accentDim }), /* @__PURE__ */ React.createElement(StatCard, { label: "MITs completed", value: `${doneCount}/${mits.length || 0}`, icon: "check", color: t.green, bg: t.greenDim }), /* @__PURE__ */ React.createElement(StatCard, { label: "Habit streak points", value: streakSum, icon: "flame", color: t.amber, bg: t.amberDim }), /* @__PURE__ */ React.createElement(StatCard, { label: "Distractions logged", value: state.distractions, icon: "alert", color: t.red, bg: t.redDim })), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: window.innerWidth < 900 ? "1fr" : "1.3fr 1fr", gap: 16 } }, /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Today's Most Important Tasks", action: "Priority Matrix \u2192", onAction: () => setView("priority") }), mits.length === 0 && /* @__PURE__ */ React.createElement(EmptyHint, { text: "No MITs set yet. Go to Priority Matrix and mark up to 3 tasks as MIT." }), mits.map((m) => /* @__PURE__ */ React.createElement("div", { key: m.id, style: { display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement("button", { onClick: () => actions.toggleMit(m.id), style: { width: 20, height: 20, borderRadius: 6, border: `1.5px solid ${m.done ? t.green : t.textFaint}`, background: m.done ? t.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 } }, m.done && /* @__PURE__ */ React.createElement(Icon, { name: "check", size: 12, color: "#fff" })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "Inter", fontSize: 14, color: m.done ? t.textFaint : t.text, textDecoration: m.done ? "line-through" : "none" } }, m.text)))), /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Habit pulse", action: "View all \u2192", onAction: () => setView("habits") }), state.habits.slice(0, 4).map((h) => /* @__PURE__ */ React.createElement("div", { key: h.id, style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 0" } }, /* @__PURE__ */ React.createElement(MiniRing, { progress: Math.min(currentStreak(h.history) / 30, 1), color: t.amber, trackColor: t.surface3 }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 13.5, color: t.text, fontWeight: 500 } }, h.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "JetBrains Mono", fontSize: 11, color: t.textMuted } }, currentStreak(h.history), " day streak")))))));
+}
+function StatCard({ label, value, icon, color, bg }) {
+  const t = useT();
+  return /* @__PURE__ */ React.createElement(Card, { style: { padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 32, height: 32, borderRadius: 9, background: bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement(Icon, { name: icon, size: 16, color })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "JetBrains Mono", fontSize: 22, fontWeight: 700, color: t.text } }, value), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 12, color: t.textMuted, marginTop: 2 } }, label));
+}
+const QUADRANTS = [
+  { id: "do", title: "Do Now", sub: "Urgent + Important", color: "accent" },
+  { id: "schedule", title: "Schedule", sub: "Important, not urgent", color: "green" },
+  { id: "delegate", title: "Delegate", sub: "Urgent, not important", color: "amber" },
+  { id: "delete", title: "Eliminate", sub: "Neither", color: "red" }
+];
+function PriorityMatrix({ state, actions }) {
+  const t = useT();
+  const [drafts, setDrafts] = useState({ do: "", schedule: "", delegate: "", delete: "" });
+  const mitCount = state.mits.filter((m) => m.mit).length;
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(PageTitle, { title: "Smart Priority Matrix", sub: `${mitCount}/3 Most Important Tasks selected today` }), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: window.innerWidth < 700 ? "1fr" : "1fr 1fr", gap: 14 } }, QUADRANTS.map((q) => {
+    const items = state.mits.filter((m) => m.quadrant === q.id);
+    const c = t[q.color], bg = t[`${q.color}Dim`];
+    return /* @__PURE__ */ React.createElement(Card, { key: q.id, style: { borderTop: `3px solid ${c}` } }, /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Space Grotesk", fontWeight: 600, fontSize: 14.5, color: t.text } }, q.title), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 11.5, color: t.textMuted } }, q.sub)), items.map((item) => /* @__PURE__ */ React.createElement("div", { key: item.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement("button", { onClick: () => actions.toggleMit(item.id), style: { width: 17, height: 17, borderRadius: 5, border: `1.5px solid ${item.done ? t.green : t.textFaint}`, background: item.done ? t.green : "transparent", flexShrink: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, item.done && /* @__PURE__ */ React.createElement(Icon, { name: "check", size: 10, color: "#fff" })), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontFamily: "Inter", fontSize: 13, color: item.done ? t.textFaint : t.text, textDecoration: item.done ? "line-through" : "none" } }, item.text), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.toggleTaskMit(item.id), title: "Mark as MIT", style: { background: item.mit ? bg : "transparent", border: `1px solid ${item.mit ? c : t.border}`, color: item.mit ? c : t.textFaint, borderRadius: 6, fontSize: 9.5, fontWeight: 700, padding: "2px 6px", cursor: "pointer", fontFamily: "Inter" } }, "MIT"), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.removeMit(item.id), style: { background: "none", border: "none", color: t.textFaint, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 13 })))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement(
+      TextInput,
+      {
+        value: drafts[q.id],
+        placeholder: "Add task\u2026",
+        onChange: (e) => setDrafts({ ...drafts, [q.id]: e.target.value }),
+        onKeyDown: (e) => {
+          if (e.key === "Enter" && drafts[q.id].trim()) {
+            actions.addMit(drafts[q.id].trim(), q.id);
+            setDrafts({ ...drafts, [q.id]: "" });
+          }
+        },
+        style: { fontSize: 12.5, padding: "7px 10px" }
+      }
+    )));
+  })));
+}
+const MODES = { pomodoro: 25 * 60, longbreak: 5 * 60, deep: 90 * 60 };
+function DeepWork({ state, actions }) {
+  const t = useT();
+  const [mode, setMode] = useState("pomodoro");
+  const [secondsLeft, setSecondsLeft] = useState(MODES.pomodoro);
+  const [running, setRunning] = useState(false);
+  const intervalRef = useRef(null);
+  useEffect(() => {
+    setSecondsLeft(MODES[mode]);
+    setRunning(false);
+  }, [mode]);
+  useEffect(() => {
+    if (running) {
+      intervalRef.current = setInterval(() => {
+        setSecondsLeft((s) => {
+          if (s <= 1) {
+            clearInterval(intervalRef.current);
+            setRunning(false);
+            actions.logSession(mode, MODES[mode] / 60);
+            return MODES[mode];
+          }
+          return s - 1;
+        });
+      }, 1e3);
+    } else {
+      clearInterval(intervalRef.current);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [running, mode]);
+  const progress = 1 - secondsLeft / MODES[mode];
+  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
+  const ss = String(secondsLeft % 60).padStart(2, "0");
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(PageTitle, { title: "Deep Work Timer", sub: "Protect the block. Log every distraction." }), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: window.innerWidth < 900 ? "1fr" : "1fr 1fr", gap: 16 } }, /* @__PURE__ */ React.createElement(Card, { style: { display: "flex", flexDirection: "column", alignItems: "center", padding: "32px 20px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 26, flexWrap: "wrap", justifyContent: "center" } }, Object.keys(MODES).map((m) => /* @__PURE__ */ React.createElement("button", { key: m, onClick: () => setMode(m), style: { padding: "6px 14px", borderRadius: 999, border: `1px solid ${mode === m ? t.accent : t.border}`, background: mode === m ? t.accentDim : "transparent", color: mode === m ? t.accent : t.textMuted, fontFamily: "Inter", fontSize: 12, fontWeight: 600, cursor: "pointer" } }, m === "longbreak" ? "Short Break" : m === "deep" ? "90-min Deep" : "Pomodoro"))), /* @__PURE__ */ React.createElement(ProgressRing, { progress, size: 220, color: t.accent, trackColor: t.surface3 }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "JetBrains Mono", fontSize: 38, fontWeight: 700, color: t.text } }, mm, ":", ss), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "Inter", fontSize: 11.5, color: t.textMuted, marginTop: 4 } }, running ? "Focusing\u2026" : "Paused")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 28 } }, /* @__PURE__ */ React.createElement(PrimaryBtn, { icon: running ? "pause" : "play", onClick: () => setRunning((r) => !r) }, running ? "Pause" : "Start"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+    setSecondsLeft(MODES[mode]);
+    setRunning(false);
+  }, style: { display: "flex", alignItems: "center", gap: 6, background: "transparent", border: `1px solid ${t.border}`, color: t.textMuted, borderRadius: 10, padding: "9px 14px", cursor: "pointer", fontFamily: "Inter", fontSize: 13 } }, /* @__PURE__ */ React.createElement(Icon, { name: "reset", size: 14 }), "Reset")), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.logDistraction(), style: { marginTop: 22, display: "flex", alignItems: "center", gap: 6, background: t.redDim, border: `1px solid ${t.red}55`, color: t.red, borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontFamily: "Inter", fontSize: 12.5, fontWeight: 600 } }, /* @__PURE__ */ React.createElement(Icon, { name: "alert", size: 14 }), "I got distracted (", state.distractions, " today)")), /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Session log" }), state.sessions.length === 0 && /* @__PURE__ */ React.createElement(EmptyHint, { text: "No sessions completed yet today. Start your first focus block." }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8, maxHeight: 380, overflowY: "auto" } }, [...state.sessions].reverse().map((s) => /* @__PURE__ */ React.createElement("div", { key: s.id, style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 12px", background: t.surface2, borderRadius: 10 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 13, color: t.text, fontWeight: 500 } }, s.mode === "longbreak" ? "Short Break" : s.mode === "deep" ? "90-min Deep Work" : "Pomodoro"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "JetBrains Mono", fontSize: 11, color: t.textMuted } }, s.time)), /* @__PURE__ */ React.createElement(Badge, { color: t.accent, bg: t.accentDim }, s.minutes, "m")))))));
+}
+function Habits({ state, actions }) {
+  const t = useT();
+  const [name, setName] = useState("");
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(PageTitle, { title: "Habit Tracker", sub: "Identity-based habits. Small reps, compounding." }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 18, maxWidth: 380 } }, /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: name,
+      placeholder: "e.g. Write 500 words",
+      onChange: (e) => setName(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && name.trim()) {
+          actions.addHabit(name.trim());
+          setName("");
+        }
+      }
+    }
+  ), /* @__PURE__ */ React.createElement(PrimaryBtn, { icon: "plus", onClick: () => {
+    if (name.trim()) {
+      actions.addHabit(name.trim());
+      setName("");
+    }
+  } }, "Add")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } }, state.habits.map((h) => /* @__PURE__ */ React.createElement(Card, { key: h.id }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => actions.toggleHabitToday(h.id), style: { width: 26, height: 26, borderRadius: 8, cursor: "pointer", border: `1.5px solid ${h.history[todayStr()] ? t.amber : t.textFaint}`, background: h.history[todayStr()] ? t.amberDim : "transparent", color: t.amber, display: "flex", alignItems: "center", justifyContent: "center" } }, h.history[todayStr()] && /* @__PURE__ */ React.createElement(Icon, { name: "check", size: 14, color: t.amber })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Space Grotesk", fontSize: 14.5, fontWeight: 600, color: t.text } }, h.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "JetBrains Mono", fontSize: 11, color: t.textMuted } }, currentStreak(h.history), " day streak \xB7 ", Object.values(h.history).filter(Boolean).length, " total"))), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.removeHabit(h.id), style: { background: "none", border: "none", color: t.textFaint, cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 15 }))), /* @__PURE__ */ React.createElement(ContributionGrid, { history: h.history })))));
+}
+function ContributionGrid({ history }) {
+  const t = useT();
+  const days = [];
+  const now = /* @__PURE__ */ new Date();
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+  const weeks = [];
+  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
+  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3, overflowX: "auto", paddingBottom: 4 } }, weeks.map((week, wi) => /* @__PURE__ */ React.createElement("div", { key: wi, style: { display: "flex", flexDirection: "column", gap: 3 } }, week.map((day) => /* @__PURE__ */ React.createElement("div", { key: day, title: day, style: { width: 11, height: 11, borderRadius: 3, background: history[day] ? t.amber : t.surface3 } })))));
+}
+function Goals({ state, actions }) {
+  const t = useT();
+  const [goalTitle, setGoalTitle] = useState("");
+  const [expanded, setExpanded] = useState({});
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(PageTitle, { title: "Goals", sub: "Big goal \u2192 milestones \u2192 daily tasks." }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 18, maxWidth: 420 } }, /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: goalTitle,
+      placeholder: "e.g. Launch MVP by Q4",
+      onChange: (e) => setGoalTitle(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && goalTitle.trim()) {
+          actions.addGoal(goalTitle.trim());
+          setGoalTitle("");
+        }
+      }
+    }
+  ), /* @__PURE__ */ React.createElement(PrimaryBtn, { icon: "plus", onClick: () => {
+    if (goalTitle.trim()) {
+      actions.addGoal(goalTitle.trim());
+      setGoalTitle("");
+    }
+  } }, "New Goal")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } }, state.goals.map((g) => {
+    const allTasks = g.milestones.flatMap((m) => m.tasks);
+    const doneTasks = allTasks.filter((x) => x.done).length;
+    const pct = allTasks.length ? doneTasks / allTasks.length : 0;
+    const isOpen = expanded[g.id];
+    return /* @__PURE__ */ React.createElement(Card, { key: g.id }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }, onClick: () => setExpanded({ ...expanded, [g.id]: !isOpen }) }, /* @__PURE__ */ React.createElement(MiniRing, { progress: pct, size: 38, color: t.green, trackColor: t.surface3 }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Space Grotesk", fontSize: 15, fontWeight: 600, color: t.text } }, g.title), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 11.5, color: t.textMuted } }, doneTasks, "/", allTasks.length, " tasks \xB7 ", Math.round(pct * 100), "%")), /* @__PURE__ */ React.createElement("span", { style: { transform: isOpen ? "rotate(90deg)" : "none", transition: "transform .15s", display: "flex" } }, /* @__PURE__ */ React.createElement(Icon, { name: "chevron", size: 16, color: t.textMuted }))), isOpen && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16, paddingLeft: 8, borderLeft: `2px solid ${t.border}` } }, g.milestones.map((ms) => /* @__PURE__ */ React.createElement(MilestoneRow, { key: ms.id, goalId: g.id, ms, actions })), /* @__PURE__ */ React.createElement(AddMilestone, { goalId: g.id, actions })));
+  })));
+}
+function MilestoneRow({ goalId, ms, actions }) {
+  const t = useT();
+  const [taskText, setTaskText] = useState("");
+  const done = ms.tasks.filter((x) => x.done).length;
+  return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14, paddingLeft: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 13, fontWeight: 600, color: t.text, marginBottom: 6 } }, ms.title, " ", /* @__PURE__ */ React.createElement("span", { style: { color: t.textFaint, fontWeight: 400 } }, "(", done, "/", ms.tasks.length, ")")), ms.tasks.map((task) => /* @__PURE__ */ React.createElement("div", { key: task.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "4px 0" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => actions.toggleGoalTask(goalId, ms.id, task.id), style: { width: 15, height: 15, borderRadius: 4, border: `1.5px solid ${task.done ? t.green : t.textFaint}`, background: task.done ? t.green : "transparent", cursor: "pointer", flexShrink: 0 } }), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "Inter", fontSize: 12.5, color: task.done ? t.textFaint : t.textMuted, textDecoration: task.done ? "line-through" : "none" } }, task.text))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 6 } }, /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: taskText,
+      placeholder: "Add task\u2026",
+      onChange: (e) => setTaskText(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && taskText.trim()) {
+          actions.addGoalTask(goalId, ms.id, taskText.trim());
+          setTaskText("");
+        }
+      },
+      style: { fontSize: 12, padding: "6px 10px" }
+    }
+  )));
+}
+function AddMilestone({ goalId, actions }) {
+  const [v, setV] = useState("");
+  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, paddingLeft: 14, marginTop: 4 } }, /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: v,
+      placeholder: "Add milestone\u2026",
+      onChange: (e) => setV(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && v.trim()) {
+          actions.addMilestone(goalId, v.trim());
+          setV("");
+        }
+      },
+      style: { fontSize: 12.5 }
+    }
+  ));
+}
+function Journal({ state, actions }) {
+  const t = useT();
+  const [wins, setWins] = useState("");
+  const [distraction, setDistraction] = useState("");
+  const [priority, setPriority] = useState("");
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(PageTitle, { title: "Daily Journal & Evening Reflection", sub: "Three prompts. Two minutes. Every night." }), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: window.innerWidth < 900 ? "1fr" : "1fr 1fr", gap: 16 } }, /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Tonight's reflection" }), /* @__PURE__ */ React.createElement(Field, { label: "What moved me forward today?", value: wins, onChange: setWins }), /* @__PURE__ */ React.createElement(Field, { label: "What distracted me?", value: distraction, onChange: setDistraction }), /* @__PURE__ */ React.createElement(Field, { label: "Tomorrow's #1 priority?", value: priority, onChange: setPriority }), /* @__PURE__ */ React.createElement(PrimaryBtn, { icon: "check", style: { marginTop: 4 }, onClick: () => {
+    if (wins.trim() || distraction.trim() || priority.trim()) {
+      actions.addJournalEntry({ wins, distraction, priority });
+      setWins("");
+      setDistraction("");
+      setPriority("");
+    }
+  } }, "Save reflection")), /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Past entries" }), state.journal.length === 0 && /* @__PURE__ */ React.createElement(EmptyHint, { text: "Your reflections will appear here." }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10, maxHeight: 420, overflowY: "auto" } }, [...state.journal].reverse().map((j) => /* @__PURE__ */ React.createElement("div", { key: j.id, style: { background: t.surface2, borderRadius: 10, padding: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "JetBrains Mono", fontSize: 10.5, color: t.textFaint, marginBottom: 6 } }, j.date), j.wins && /* @__PURE__ */ React.createElement(JournalLine, { label: "Forward", text: j.wins, color: t.green }), j.distraction && /* @__PURE__ */ React.createElement(JournalLine, { label: "Distracted", text: j.distraction, color: t.red }), j.priority && /* @__PURE__ */ React.createElement(JournalLine, { label: "Tomorrow", text: j.priority, color: t.accent })))))));
+}
+function Field({ label, value, onChange }) {
+  const t = useT();
+  return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("label", { style: { fontFamily: "Inter", fontSize: 12, color: t.textMuted, marginBottom: 5, display: "block" } }, label), /* @__PURE__ */ React.createElement("textarea", { value, onChange: (e) => onChange(e.target.value), rows: 2, style: { width: "100%", background: t.surface2, border: `1px solid ${t.border}`, borderRadius: 10, padding: "9px 11px", color: t.text, fontFamily: "Inter", fontSize: 13.5, outline: "none", resize: "vertical" } }));
+}
+function JournalLine({ label, text, color }) {
+  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "Inter", fontSize: 11, fontWeight: 700, color, flexShrink: 0 } }, label, ":"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "Inter", fontSize: 12, color: "inherit" } }, text));
+}
+function Analytics({ state }) {
+  const t = useT();
+  const weekData = useMemo(() => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = /* @__PURE__ */ new Date();
+      d.setDate(d.getDate() - i);
+      const label = d.toLocaleDateString(void 0, { weekday: "short" });
+      days.push({ day: label, hours: i === 0 ? +(state.sessions.reduce((s, x) => s + x.minutes, 0) / 60).toFixed(1) : +(Math.random() * 4 + 1).toFixed(1) });
+    }
+    return days;
+  }, [state.sessions]);
+  const habitCompletion = useMemo(() => state.habits.map((h) => ({
+    name: h.name.length > 10 ? h.name.slice(0, 10) + "\u2026" : h.name,
+    pct: Math.round(Object.values(h.history).filter(Boolean).length / 90 * 100)
+  })), [state.habits]);
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(PageTitle, { title: "Productivity Analytics", sub: "Weekly and monthly trends across focus, habits, goals." }), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: window.innerWidth < 900 ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 } }, /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Focus hours \u2014 last 7 days" }), /* @__PURE__ */ React.createElement(LineChartSimple, { data: weekData, xKey: "day", yKey: "hours", color: t.accent })), /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Habit completion (90 days)" }), habitCompletion.length === 0 ? /* @__PURE__ */ React.createElement(EmptyHint, { text: "Add habits to see completion trends." }) : /* @__PURE__ */ React.createElement(BarChartSimple, { data: habitCompletion, xKey: "name", yKey: "pct", color: t.amber }))), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 14 } }, /* @__PURE__ */ React.createElement(StatCard, { label: "Total focus sessions", value: state.sessions.length, icon: "timer", color: t.accent, bg: t.accentDim }), /* @__PURE__ */ React.createElement(StatCard, { label: "Active goals", value: state.goals.length, icon: "branch", color: t.green, bg: t.greenDim }), /* @__PURE__ */ React.createElement(StatCard, { label: "Journal entries", value: state.journal.length, icon: "trend", color: t.amber, bg: t.amberDim })));
+}
+function DailyPlanner({ state, actions }) {
+  const t = useT();
+  const [pText, setPText] = useState("");
+  const [tText, setTText] = useState("");
+  const [blockTime, setBlockTime] = useState("");
+  const [blockLabel, setBlockLabel] = useState("");
+  const priorities = state.dailyPriorities;
+  const tasks = state.dailyTasks;
+  const totalItems = priorities.length + tasks.length;
+  const doneItems = priorities.filter((p) => p.done).length + tasks.filter((x) => x.done).length;
+  const pct = totalItems ? doneItems / totalItems : 0;
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(PageTitle, { title: "Daily Planner", sub: "Today's plan, one page. Plan it, block it, close it out." }), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: window.innerWidth < 900 ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 } }, /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Today's Top 3 Priorities" }), priorities.length === 0 && /* @__PURE__ */ React.createElement(EmptyHint, { text: "Add up to 3 priorities for today." }), priorities.map((p, i) => /* @__PURE__ */ React.createElement("div", { key: p.id, style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement(Badge, { color: t.accent, bg: t.accentDim }, i + 1), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.toggleDailyPriority(p.id), style: { width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${p.done ? t.green : t.textFaint}`, background: p.done ? t.green : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, p.done && /* @__PURE__ */ React.createElement(Icon, { name: "check", size: 11, color: "#fff" })), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontFamily: "Inter", fontSize: 13.5, color: p.done ? t.textFaint : t.text, textDecoration: p.done ? "line-through" : "none" } }, p.text), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.removeDailyPriority(p.id), style: { background: "none", border: "none", color: t.textFaint, cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 13 })))), priorities.length < 3 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: pText,
+      placeholder: "Add a top priority\u2026",
+      onChange: (e) => setPText(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && pText.trim()) {
+          actions.addDailyPriority(pText.trim());
+          setPText("");
+        }
+      },
+      style: { fontSize: 12.5 }
+    }
+  ))), /* @__PURE__ */ React.createElement(Card, { style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Daily Progress" }), /* @__PURE__ */ React.createElement(MiniRing, { progress: pct, size: 100, stroke: 9, color: t.green, trackColor: t.surface3 }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "JetBrains Mono", fontSize: 20, fontWeight: 700, color: t.text, marginTop: 10 } }, Math.round(pct * 100), "%"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 12, color: t.textMuted } }, doneItems, "/", totalItems, " items done"))), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: window.innerWidth < 900 ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 } }, /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Daily Task List" }), tasks.length === 0 && /* @__PURE__ */ React.createElement(EmptyHint, { text: "Add tasks for today beyond your top 3." }), tasks.map((task) => /* @__PURE__ */ React.createElement("div", { key: task.id, style: { display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement("button", { onClick: () => actions.toggleDailyTask(task.id), style: { width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${task.done ? t.green : t.textFaint}`, background: task.done ? t.green : "transparent", cursor: "pointer", flexShrink: 0 } }), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontFamily: "Inter", fontSize: 13, color: task.done ? t.textFaint : t.text, textDecoration: task.done ? "line-through" : "none" } }, task.text), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.removeDailyTask(task.id), style: { background: "none", border: "none", color: t.textFaint, cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 13 })))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: tText,
+      placeholder: "Add a task\u2026",
+      onChange: (e) => setTText(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && tText.trim()) {
+          actions.addDailyTask(tText.trim());
+          setTText("");
+        }
+      },
+      style: { fontSize: 12.5 }
+    }
+  ))), /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Schedule / Time Blocks" }), state.timeBlocks.length === 0 && /* @__PURE__ */ React.createElement(EmptyHint, { text: "Block out your day, e.g. 9:00 AM \u2014 Deep work." }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, [...state.timeBlocks].sort((a, b) => a.time.localeCompare(b.time)).map((b) => /* @__PURE__ */ React.createElement("div", { key: b.id, style: { display: "flex", alignItems: "center", gap: 10, background: t.surface2, borderRadius: 10, padding: "8px 12px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "JetBrains Mono", fontSize: 11.5, color: t.accent, minWidth: 64 } }, b.time), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontFamily: "Inter", fontSize: 13, color: t.text } }, b.label), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.removeTimeBlock(b.id), style: { background: "none", border: "none", color: t.textFaint, cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 13 }))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement(TextInput, { value: blockTime, placeholder: "9:00 AM", onChange: (e) => setBlockTime(e.target.value), style: { fontSize: 12.5, maxWidth: 90 } }), /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: blockLabel,
+      placeholder: "What's happening\u2026",
+      onChange: (e) => setBlockLabel(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && blockTime.trim() && blockLabel.trim()) {
+          actions.addTimeBlock(blockTime.trim(), blockLabel.trim());
+          setBlockTime("");
+          setBlockLabel("");
+        }
+      },
+      style: { fontSize: 12.5 }
+    }
+  ), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+    if (blockTime.trim() && blockLabel.trim()) {
+      actions.addTimeBlock(blockTime.trim(), blockLabel.trim());
+      setBlockTime("");
+      setBlockLabel("");
+    }
+  }, style: { background: t.accentDim, border: `1px solid ${t.accent}55`, color: t.accent, borderRadius: 10, padding: "0 12px", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "plus", size: 14 }))))), /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "End-of-Day Summary" }), /* @__PURE__ */ React.createElement(
+    "textarea",
+    {
+      value: state.endOfDaySummary,
+      onChange: (e) => actions.setEndOfDaySummary(e.target.value),
+      rows: 3,
+      placeholder: "How did today go?",
+      style: { width: "100%", background: t.surface2, border: `1px solid ${t.border}`, borderRadius: 10, padding: "10px 12px", color: t.text, fontFamily: "Inter", fontSize: 13.5, outline: "none", resize: "vertical", marginBottom: 10 }
+    }
+  ), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.setEndOfDaySummary(generateDailySummary(state)), style: { display: "flex", alignItems: "center", gap: 6, background: t.amberDim, border: `1px solid ${t.amber}55`, color: t.amber, borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontFamily: "Inter", fontSize: 12.5, fontWeight: 600 } }, /* @__PURE__ */ React.createElement(Icon, { name: "sparkle", size: 14 }), "Auto-generate summary")));
+}
+function generateDailySummary(state) {
+  const doneP = state.dailyPriorities.filter((p) => p.done).length;
+  const doneT = state.dailyTasks.filter((x) => x.done).length;
+  const focusMins = state.sessions.reduce((s, x) => s + x.minutes, 0);
+  const habitsCompleted = state.habits.filter((h) => h.history[todayStr()]).length;
+  return `Today: ${doneP}/${state.dailyPriorities.length} top priorities done, ${doneT}/${state.dailyTasks.length} tasks completed, ${(focusMins / 60).toFixed(1)}h of focused work across ${state.sessions.length} session(s), ${habitsCompleted}/${state.habits.length} habits kept, and ${state.distractions} logged distraction(s). ${doneP === state.dailyPriorities.length && state.dailyPriorities.length > 0 ? "Strong day \u2014 all top priorities cleared." : "Carry forward anything unfinished into tomorrow."}`;
+}
+function RoadmapPage({ state, actions }) {
+  const t = useT();
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(PageTitle, { title: "Roadmap", sub: "Long-term goals, broken into milestones, on a visual timeline." }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(TextInput, { value: title, placeholder: "e.g. Reach $10k MRR", onChange: (e) => setTitle(e.target.value), style: { maxWidth: 280 } }), /* @__PURE__ */ React.createElement(TextInput, { value: date, placeholder: "Target date (e.g. Dec 2026)", onChange: (e) => setDate(e.target.value), style: { maxWidth: 200 } }), /* @__PURE__ */ React.createElement(PrimaryBtn, { icon: "plus", onClick: () => {
+    if (title.trim()) {
+      actions.addRoadmap(title.trim(), date.trim());
+      setTitle("");
+      setDate("");
+    }
+  } }, "New Roadmap")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, state.roadmaps.length === 0 && /* @__PURE__ */ React.createElement(EmptyHint, { text: "Create your first long-term roadmap above." }), state.roadmaps.map((r) => {
+    const done = r.milestones.filter((m) => m.done).length;
+    const pct = r.milestones.length ? done / r.milestones.length : 0;
+    return /* @__PURE__ */ React.createElement(Card, { key: r.id }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Space Grotesk", fontSize: 16, fontWeight: 600, color: t.text } }, r.title), r.date && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "JetBrains Mono", fontSize: 11, color: t.textMuted, marginTop: 2 } }, "Target: ", r.date)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "JetBrains Mono", fontSize: 13, color: t.green, fontWeight: 700 } }, Math.round(pct * 100), "%"), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.removeRoadmap(r.id), style: { background: "none", border: "none", color: t.textFaint, cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 15 })))), /* @__PURE__ */ React.createElement("div", { style: { height: 6, background: t.surface3, borderRadius: 99, marginBottom: 20, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${pct * 100}%`, background: t.green, borderRadius: 99, transition: "width .4s ease" } })), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", paddingLeft: 22 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 6, top: 4, bottom: 4, width: 2, background: t.border } }), r.milestones.map((m) => /* @__PURE__ */ React.createElement("div", { key: m.id, style: { position: "relative", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { onClick: () => actions.toggleRoadmapMilestone(r.id, m.id), style: {
+      position: "absolute",
+      left: -22,
+      top: 2,
+      width: 14,
+      height: 14,
+      borderRadius: "50%",
+      cursor: "pointer",
+      background: m.done ? t.green : t.surface,
+      border: `2px solid ${m.done ? t.green : t.textFaint}`
+    } }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "Inter", fontSize: 13.5, color: m.done ? t.textFaint : t.text, textDecoration: m.done ? "line-through" : "none" } }, m.title), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.removeRoadmapMilestone(r.id, m.id), style: { background: "none", border: "none", color: t.textFaint, cursor: "pointer", flexShrink: 0 } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 12 }))))), /* @__PURE__ */ React.createElement(AddInlineMilestone, { roadmapId: r.id, actions })));
+  })));
+}
+function AddInlineMilestone({ roadmapId, actions }) {
+  const [v, setV] = useState("");
+  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: v,
+      placeholder: "Add milestone\u2026",
+      onChange: (e) => setV(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && v.trim()) {
+          actions.addRoadmapMilestone(roadmapId, v.trim());
+          setV("");
+        }
+      },
+      style: { fontSize: 12.5 }
+    }
+  ));
+}
+const STUDY_TIMER_SECONDS = 25 * 60;
+function Study({ state, actions }) {
+  const t = useT();
+  const [subjectName, setSubjectName] = useState("");
+  const [assignSubject, setAssignSubject] = useState("");
+  const [assignText, setAssignText] = useState("");
+  const [goalText, setGoalText] = useState("");
+  const [secondsLeft, setSecondsLeft] = useState(STUDY_TIMER_SECONDS);
+  const [running, setRunning] = useState(false);
+  const [timerSubject, setTimerSubject] = useState("");
+  const intervalRef = useRef(null);
+  useEffect(() => {
+    if (running) {
+      intervalRef.current = setInterval(() => setSecondsLeft((s) => {
+        if (s <= 1) {
+          clearInterval(intervalRef.current);
+          setRunning(false);
+          actions.logStudySession(timerSubject || "General", STUDY_TIMER_SECONDS / 60);
+          return STUDY_TIMER_SECONDS;
+        }
+        return s - 1;
+      }), 1e3);
+    } else clearInterval(intervalRef.current);
+    return () => clearInterval(intervalRef.current);
+  }, [running]);
+  const doneAssignments = state.studyTasks.filter((x) => x.done).length;
+  const studyPct = state.studyTasks.length ? doneAssignments / state.studyTasks.length : 0;
+  const progress = 1 - secondsLeft / STUDY_TIMER_SECONDS;
+  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
+  const ss = String(secondsLeft % 60).padStart(2, "0");
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(PageTitle, { title: "Study / Learning", sub: "Subjects, assignments, learning goals \u2014 and a focused study timer." }), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: window.innerWidth < 900 ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 } }, /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Subjects" }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 } }, state.subjects.map((s) => /* @__PURE__ */ React.createElement("div", { key: s.id, style: { display: "flex", alignItems: "center", gap: 6, background: t.surface2, border: `1px solid ${t.border}`, borderRadius: 999, padding: "5px 10px" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 8, height: 8, borderRadius: "50%", background: s.color } }), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "Inter", fontSize: 12.5, color: t.text } }, s.name), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.removeSubject(s.id), style: { background: "none", border: "none", color: t.textFaint, cursor: "pointer", display: "flex" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 11 })))), state.subjects.length === 0 && /* @__PURE__ */ React.createElement(EmptyHint, { text: "Add subjects you're studying." })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: subjectName,
+      placeholder: "e.g. Data Structures",
+      onChange: (e) => setSubjectName(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && subjectName.trim()) {
+          actions.addSubject(subjectName.trim());
+          setSubjectName("");
+        }
+      }
+    }
+  ), /* @__PURE__ */ React.createElement(PrimaryBtn, { icon: "plus", onClick: () => {
+    if (subjectName.trim()) {
+      actions.addSubject(subjectName.trim());
+      setSubjectName("");
+    }
+  } }, "Add"))), /* @__PURE__ */ React.createElement(Card, { style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Study Progress" }), /* @__PURE__ */ React.createElement(MiniRing, { progress: studyPct, size: 100, stroke: 9, color: t.accent, trackColor: t.surface3 }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "JetBrains Mono", fontSize: 20, fontWeight: 700, color: t.text, marginTop: 10 } }, Math.round(studyPct * 100), "%"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 12, color: t.textMuted } }, doneAssignments, "/", state.studyTasks.length, " assignments done"))), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: window.innerWidth < 900 ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 } }, /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Assignments (Study Planner)" }), state.studyTasks.map((a) => /* @__PURE__ */ React.createElement("div", { key: a.id, style: { display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement("button", { onClick: () => actions.toggleStudyTask(a.id), style: { width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${a.done ? t.green : t.textFaint}`, background: a.done ? t.green : "transparent", cursor: "pointer", flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 13, color: a.done ? t.textFaint : t.text, textDecoration: a.done ? "line-through" : "none" } }, a.text), a.subject && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 10.5, color: t.textFaint } }, a.subject)), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.removeStudyTask(a.id), style: { background: "none", border: "none", color: t.textFaint, cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 13 })))), state.studyTasks.length === 0 && /* @__PURE__ */ React.createElement(EmptyHint, { text: "Add assignments to track." }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("select", { value: assignSubject, onChange: (e) => setAssignSubject(e.target.value), style: { background: t.surface2, border: `1px solid ${t.border}`, borderRadius: 10, padding: "8px 10px", color: t.text, fontFamily: "Inter", fontSize: 12.5 } }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Subject\u2026"), state.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.name }, s.name))), /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: assignText,
+      placeholder: "Assignment\u2026",
+      onChange: (e) => setAssignText(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && assignText.trim()) {
+          actions.addStudyTask(assignText.trim(), assignSubject);
+          setAssignText("");
+        }
+      },
+      style: { fontSize: 12.5, flex: 1, minWidth: 120 }
+    }
+  ))), /* @__PURE__ */ React.createElement(Card, null, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Learning Goals" }), state.learningGoals.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id, style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 5 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "Inter", fontSize: 13, color: t.text } }, g.text), /* @__PURE__ */ React.createElement("button", { onClick: () => actions.removeLearningGoal(g.id), style: { background: "none", border: "none", color: t.textFaint, cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 12 }))), /* @__PURE__ */ React.createElement("input", { type: "range", min: "0", max: "100", value: g.progress, onChange: (e) => actions.updateLearningGoalProgress(g.id, +e.target.value), style: { width: "100%", accentColor: t.accent } }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "JetBrains Mono", fontSize: 10.5, color: t.textMuted } }, g.progress, "%"))), state.learningGoals.length === 0 && /* @__PURE__ */ React.createElement(EmptyHint, { text: 'e.g. "Finish React course", "Read 5 ML papers".' }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 6 } }, /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: goalText,
+      placeholder: "Add a learning goal\u2026",
+      onChange: (e) => setGoalText(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && goalText.trim()) {
+          actions.addLearningGoal(goalText.trim());
+          setGoalText("");
+        }
+      },
+      style: { fontSize: 12.5 }
+    }
+  )))), /* @__PURE__ */ React.createElement(Card, { style: { display: "flex", flexDirection: "column", alignItems: "center", padding: 28 } }, /* @__PURE__ */ React.createElement(SectionHeader, { title: "Focus Study Timer" }), /* @__PURE__ */ React.createElement("select", { value: timerSubject, onChange: (e) => setTimerSubject(e.target.value), style: { background: t.surface2, border: `1px solid ${t.border}`, borderRadius: 10, padding: "7px 10px", color: t.text, fontFamily: "Inter", fontSize: 12.5, marginBottom: 18 } }, /* @__PURE__ */ React.createElement("option", { value: "" }, "General study"), state.subjects.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.name }, s.name))), /* @__PURE__ */ React.createElement(ProgressRing, { progress, size: 190, color: t.accent, trackColor: t.surface3 }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "JetBrains Mono", fontSize: 32, fontWeight: 700, color: t.text } }, mm, ":", ss), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "Inter", fontSize: 11, color: t.textMuted, marginTop: 4 } }, running ? "Studying\u2026" : "Paused")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 22 } }, /* @__PURE__ */ React.createElement(PrimaryBtn, { icon: running ? "pause" : "play", onClick: () => setRunning((r) => !r) }, running ? "Pause" : "Start"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+    setSecondsLeft(STUDY_TIMER_SECONDS);
+    setRunning(false);
+  }, style: { display: "flex", alignItems: "center", gap: 6, background: "transparent", border: `1px solid ${t.border}`, color: t.textMuted, borderRadius: 10, padding: "9px 14px", cursor: "pointer", fontFamily: "Inter", fontSize: 13 } }, /* @__PURE__ */ React.createElement(Icon, { name: "reset", size: 14 }), "Reset")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 11.5, color: t.textFaint, marginTop: 14 } }, state.studySessions.length, " study session(s) logged \xB7 ", (state.studySessions.reduce((s, x) => s + x.minutes, 0) / 60).toFixed(1), "h total")));
+}
+const AI_QUICK_ACTIONS = [
+  { id: "priorities", label: "Suggest today's priorities" },
+  { id: "organize", label: "Help organize my tasks" },
+  { id: "breakdown", label: "Break down a goal" },
+  { id: "focus", label: "Recommend a focus session" },
+  { id: "summary", label: "Daily productivity summary" }
+];
+function AIAssistant({ state, actions }) {
+  const t = useT();
+  const [input, setInput] = useState("");
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [state.aiMessages]);
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(PageTitle, { title: "AI Assistant", sub: "On-device productivity suggestions, based on your current data." }), /* @__PURE__ */ React.createElement(Card, { style: { padding: 0, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px", borderBottom: `1px solid ${t.border}`, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 30, height: 30, borderRadius: 9, background: t.accentDim, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Icon, { name: "bot", size: 16, color: t.accent })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Space Grotesk", fontSize: 14, fontWeight: 600, color: t.text } }, "Focus Assistant"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 11, color: t.textMuted } }, "Reads your Daily, Priority, Habits & Goals data to help you plan."))), /* @__PURE__ */ React.createElement("div", { ref: scrollRef, style: { height: 340, overflowY: "auto", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12, background: t.surface2 } }, state.aiMessages.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "Inter", fontSize: 13, color: t.textFaint, fontStyle: "italic", textAlign: "center", marginTop: 40 } }, 'Try a quick action below, or ask something like "what should I focus on today?"'), state.aiMessages.map((m) => /* @__PURE__ */ React.createElement("div", { key: m.id, style: { display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" } }, /* @__PURE__ */ React.createElement("div", { style: {
+    maxWidth: "80%",
+    padding: "9px 13px",
+    borderRadius: 14,
+    background: m.role === "user" ? t.accent : t.surface,
+    color: m.role === "user" ? "#fff" : t.text,
+    border: m.role === "user" ? "none" : `1px solid ${t.border}`,
+    fontFamily: "Inter",
+    fontSize: 13,
+    lineHeight: 1.5,
+    whiteSpace: "pre-line"
+  } }, m.text)))), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 18px", borderTop: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 } }, AI_QUICK_ACTIONS.map((qa) => /* @__PURE__ */ React.createElement("button", { key: qa.id, onClick: () => actions.aiSend(qa.label, qa.id), style: {
+    background: t.surface2,
+    border: `1px solid ${t.border}`,
+    color: t.textMuted,
+    borderRadius: 999,
+    padding: "6px 12px",
+    fontFamily: "Inter",
+    fontSize: 11.5,
+    cursor: "pointer"
+  } }, qa.label))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement(
+    TextInput,
+    {
+      value: input,
+      placeholder: "Ask the assistant\u2026",
+      onChange: (e) => setInput(e.target.value),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" && input.trim()) {
+          actions.aiSend(input.trim());
+          setInput("");
+        }
+      }
+    }
+  ), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+    if (input.trim()) {
+      actions.aiSend(input.trim());
+      setInput("");
+    }
+  }, style: { background: t.accent, border: "none", color: "#fff", borderRadius: 10, padding: "0 16px", cursor: "pointer", display: "flex", alignItems: "center" } }, /* @__PURE__ */ React.createElement(Icon, { name: "send", size: 16, color: "#fff" }))))));
+}
+function generateAIReply(userText, actionId, state) {
+  const mits = state.mits.filter((m) => m.mit);
+  const openGoalTasks = state.goals.flatMap((g) => g.milestones.flatMap((m) => m.tasks)).filter((t2) => !t2.done);
+  const streaks = state.habits.map((h) => ({ name: h.name, streak: currentStreak(h.history) }));
+  if (actionId === "priorities" || /priorit/i.test(userText)) {
+    if (mits.length === 0 && state.dailyPriorities.length === 0) {
+      return "You don't have any priorities set yet. Pick your 3 most consequential tasks for today \u2014 the ones that, if done, make everything else easier \u2014 and add them on the Daily or Priority page.";
+    }
+    const list = [...state.dailyPriorities.map((p) => p.text), ...mits.map((m) => m.text)].slice(0, 3);
+    return `Based on what's already flagged, here's a focused order for today:
+${list.map((x, i) => `${i + 1}. ${x}`).join("\n")}
+
+Do the hardest one first, while your focus is freshest.`;
+  }
+  if (actionId === "organize" || /organi[sz]e|task/i.test(userText)) {
+    const undone = state.dailyTasks.filter((x) => !x.done).length;
+    return `You have ${undone} open task(s) on Daily and ${openGoalTasks.length} open task(s) across your goals. Suggestion: batch similar tasks together (all writing, then all calls, then all admin) and time-block them \u2014 you can add blocks on the Daily page.`;
+  }
+  if (actionId === "breakdown" || /break.*down|goal/i.test(userText)) {
+    const goal = state.goals[0] || state.roadmaps[0];
+    if (!goal) return "Add a goal on the Goals or Roadmap page first, then ask me to break it down \u2014 I'll suggest milestone-sized chunks.";
+    return `For "${goal.title}", try 3 milestones: (1) define the smallest version that proves the concept, (2) build/execute that version, (3) get feedback and decide what's next. Add these as milestones and break each into 2-3 concrete tasks.`;
+  }
+  if (actionId === "focus" || /focus session|pomodoro|deep work/i.test(userText)) {
+    const todayMins = state.sessions.reduce((s, x) => s + x.minutes, 0);
+    if (todayMins === 0) return "You haven't logged a focus session today. Start with one 25-minute Pomodoro on the Deep Work page to build momentum before attempting a longer 90-minute block.";
+    return `You've logged ${(todayMins / 60).toFixed(1)}h of focus today. If your top priority is still open, one more 90-minute Deep Work block would likely close it out \u2014 best done before you check messages again.`;
+  }
+  if (actionId === "summary" || /summary/i.test(userText)) {
+    return generateDailySummary(state);
+  }
+  if (streaks.length && /habit/i.test(userText)) {
+    const best = streaks.sort((a, b) => b.streak - a.streak)[0];
+    return `Your strongest habit streak right now is "${best.name}" at ${best.streak} day(s). Protect that one first today \u2014 momentum compounds.`;
+  }
+  return "I can suggest priorities, help organize tasks, break a goal into milestones, recommend a focus session, or generate a daily summary \u2014 try one of the quick actions above, or ask me directly.";
+}
+function FocusOSApp() {
+  const [theme, setTheme] = useLocalStorage("fos_theme", "dark");
+  const [view, setView] = useState("dashboard");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 760);
+  const [collapsed, setCollapsed] = useLocalStorage("fos_sidebar_collapsed", false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 760);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  useEffect(() => {
+    if (!isMobile) setMobileOpen(false);
+  }, [isMobile]);
+  const [mits, setMits] = useLocalStorage("fos_mits", [
+    { id: uid(), text: "Ship onboarding flow v2", quadrant: "do", mit: true, done: false },
+    { id: uid(), text: "Write investor update", quadrant: "schedule", mit: true, done: false },
+    { id: uid(), text: "Review support tickets", quadrant: "delegate", mit: false, done: true }
+  ]);
+  const [sessions, setSessions] = useLocalStorage("fos_sessions", []);
+  const [distractions, setDistractions] = useLocalStorage("fos_distractions", 0);
+  const [habits, setHabits] = useLocalStorage("fos_habits", [
+    { id: uid(), name: "Deep work block (90m)", history: seedHabitHistory(0.75) },
+    { id: uid(), name: "No phone before 9am", history: seedHabitHistory(0.6) },
+    { id: uid(), name: "Read 20 pages", history: seedHabitHistory(0.5) }
+  ]);
+  const [goals, setGoals] = useLocalStorage("fos_goals", [
+    { id: uid(), title: "Launch MVP by Q4", milestones: [
+      { id: uid(), title: "Finish core features", tasks: [{ id: uid(), text: "Auth flow", done: true }, { id: uid(), text: "Billing integration", done: false }] },
+      { id: uid(), title: "Beta test with 20 users", tasks: [{ id: uid(), text: "Recruit testers", done: false }] }
+    ] }
+  ]);
+  const [journal, setJournal] = useLocalStorage("fos_journal", []);
+  const [dailyPriorities, setDailyPriorities] = useLocalStorage("fos_daily_priorities", []);
+  const [dailyTasks, setDailyTasks] = useLocalStorage("fos_daily_tasks", []);
+  const [timeBlocks, setTimeBlocks] = useLocalStorage("fos_time_blocks", []);
+  const [endOfDaySummary, setEndOfDaySummary] = useLocalStorage("fos_eod_summary", "");
+  const [roadmaps, setRoadmaps] = useLocalStorage("fos_roadmaps", [
+    { id: uid(), title: "Grow to 10k users", date: "Dec 2026", milestones: [
+      { id: uid(), title: "Ship v1 publicly", done: true },
+      { id: uid(), title: "Reach 1k users", done: false },
+      { id: uid(), title: "Reach 10k users", done: false }
+    ] }
+  ]);
+  const [subjects, setSubjects] = useLocalStorage("fos_subjects", [
+    { id: uid(), name: "Core CS", color: "#6C7BFF" }
+  ]);
+  const [studyTasks, setStudyTasks] = useLocalStorage("fos_study_tasks", []);
+  const [learningGoals, setLearningGoals] = useLocalStorage("fos_learning_goals", []);
+  const [studySessions, setStudySessions] = useLocalStorage("fos_study_sessions", []);
+  const [aiMessages, setAiMessages] = useLocalStorage("fos_ai_messages", []);
+  const actions = {
+    toggleMit: (id) => setMits((m) => m.map((x) => x.id === id ? { ...x, done: !x.done } : x)),
+    toggleTaskMit: (id) => setMits((m) => {
+      const mitCount = m.filter((x) => x.mit).length;
+      return m.map((x) => x.id === id ? x.mit || mitCount < 3 ? { ...x, mit: !x.mit } : x : x);
+    }),
+    addMit: (text, quadrant) => setMits((m) => [...m, { id: uid(), text, quadrant, mit: false, done: false }]),
+    removeMit: (id) => setMits((m) => m.filter((x) => x.id !== id)),
+    logSession: (mode, minutes) => setSessions((s) => [...s, { id: uid(), mode, minutes, time: (/* @__PURE__ */ new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]),
+    logDistraction: () => setDistractions((d) => d + 1),
+    addHabit: (name) => setHabits((h) => [...h, { id: uid(), name, history: {} }]),
+    removeHabit: (id) => setHabits((h) => h.filter((x) => x.id !== id)),
+    toggleHabitToday: (id) => setHabits((h) => h.map((x) => x.id === id ? { ...x, history: { ...x.history, [todayStr()]: !x.history[todayStr()] } } : x)),
+    addGoal: (title) => setGoals((g) => [...g, { id: uid(), title, milestones: [] }]),
+    addMilestone: (goalId, title) => setGoals((g) => g.map((x) => x.id === goalId ? { ...x, milestones: [...x.milestones, { id: uid(), title, tasks: [] }] } : x)),
+    addGoalTask: (goalId, msId, text) => setGoals((g) => g.map((x) => x.id === goalId ? { ...x, milestones: x.milestones.map((m) => m.id === msId ? { ...m, tasks: [...m.tasks, { id: uid(), text, done: false }] } : m) } : x)),
+    toggleGoalTask: (goalId, msId, taskId) => setGoals((g) => g.map((x) => x.id === goalId ? { ...x, milestones: x.milestones.map((m) => m.id === msId ? { ...m, tasks: m.tasks.map((tk) => tk.id === taskId ? { ...tk, done: !tk.done } : tk) } : m) } : x)),
+    addJournalEntry: (entry) => setJournal((j) => [...j, { id: uid(), date: (/* @__PURE__ */ new Date()).toLocaleDateString(), ...entry }]),
+    // Daily
+    addDailyPriority: (text) => setDailyPriorities((p) => p.length >= 3 ? p : [...p, { id: uid(), text, done: false }]),
+    toggleDailyPriority: (id) => setDailyPriorities((p) => p.map((x) => x.id === id ? { ...x, done: !x.done } : x)),
+    removeDailyPriority: (id) => setDailyPriorities((p) => p.filter((x) => x.id !== id)),
+    addDailyTask: (text) => setDailyTasks((x) => [...x, { id: uid(), text, done: false }]),
+    toggleDailyTask: (id) => setDailyTasks((x) => x.map((t2) => t2.id === id ? { ...t2, done: !t2.done } : t2)),
+    removeDailyTask: (id) => setDailyTasks((x) => x.filter((t2) => t2.id !== id)),
+    addTimeBlock: (time, label) => setTimeBlocks((b) => [...b, { id: uid(), time, label }]),
+    removeTimeBlock: (id) => setTimeBlocks((b) => b.filter((x) => x.id !== id)),
+    setEndOfDaySummary: (text) => setEndOfDaySummary(text),
+    // Roadmap
+    addRoadmap: (title, date) => setRoadmaps((r) => [...r, { id: uid(), title, date, milestones: [] }]),
+    removeRoadmap: (id) => setRoadmaps((r) => r.filter((x) => x.id !== id)),
+    addRoadmapMilestone: (roadmapId, title) => setRoadmaps((r) => r.map((x) => x.id === roadmapId ? { ...x, milestones: [...x.milestones, { id: uid(), title, done: false }] } : x)),
+    toggleRoadmapMilestone: (roadmapId, msId) => setRoadmaps((r) => r.map((x) => x.id === roadmapId ? { ...x, milestones: x.milestones.map((m) => m.id === msId ? { ...m, done: !m.done } : m) } : x)),
+    removeRoadmapMilestone: (roadmapId, msId) => setRoadmaps((r) => r.map((x) => x.id === roadmapId ? { ...x, milestones: x.milestones.filter((m) => m.id !== msId) } : x)),
+    // Study
+    addSubject: (name) => setSubjects((s) => [...s, { id: uid(), name, color: ["#6C7BFF", "#F2A93B", "#34D399", "#F87171", "#C084FC"][s.length % 5] }]),
+    removeSubject: (id) => setSubjects((s) => s.filter((x) => x.id !== id)),
+    addStudyTask: (text, subject) => setStudyTasks((a) => [...a, { id: uid(), text, subject, done: false }]),
+    toggleStudyTask: (id) => setStudyTasks((a) => a.map((x) => x.id === id ? { ...x, done: !x.done } : x)),
+    removeStudyTask: (id) => setStudyTasks((a) => a.filter((x) => x.id !== id)),
+    addLearningGoal: (text) => setLearningGoals((g) => [...g, { id: uid(), text, progress: 0 }]),
+    updateLearningGoalProgress: (id, progress) => setLearningGoals((g) => g.map((x) => x.id === id ? { ...x, progress } : x)),
+    removeLearningGoal: (id) => setLearningGoals((g) => g.filter((x) => x.id !== id)),
+    logStudySession: (subject, minutes) => setStudySessions((s) => [...s, { id: uid(), subject, minutes, time: (/* @__PURE__ */ new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]),
+    // AI Assistant
+    aiSend: (text, actionId) => {
+      setAiMessages((m) => [...m, { id: uid(), role: "user", text }]);
+      setTimeout(() => {
+        setAiMessages((m) => [...m, { id: uid(), role: "assistant", text: generateAIReply(text, actionId, state) }]);
+      }, 300);
+    }
+  };
+  const state = { mits, sessions, distractions, habits, goals, journal, dailyPriorities, dailyTasks, timeBlocks, endOfDaySummary, roadmaps, subjects, studyTasks, learningGoals, studySessions, aiMessages };
+  const t = THEMES[theme];
+  const views = {
+    dashboard: /* @__PURE__ */ React.createElement(Dashboard, { state, actions, setView }),
+    daily: /* @__PURE__ */ React.createElement(DailyPlanner, { state, actions }),
+    priority: /* @__PURE__ */ React.createElement(PriorityMatrix, { state, actions }),
+    deepwork: /* @__PURE__ */ React.createElement(DeepWork, { state, actions }),
+    habits: /* @__PURE__ */ React.createElement(Habits, { state, actions }),
+    study: /* @__PURE__ */ React.createElement(Study, { state, actions }),
+    goals: /* @__PURE__ */ React.createElement(Goals, { state, actions }),
+    roadmap: /* @__PURE__ */ React.createElement(RoadmapPage, { state, actions }),
+    journal: /* @__PURE__ */ React.createElement(Journal, { state, actions }),
+    analytics: /* @__PURE__ */ React.createElement(Analytics, { state }),
+    ai: /* @__PURE__ */ React.createElement(AIAssistant, { state, actions })
+  };
+  return /* @__PURE__ */ React.createElement(ThemeCtx.Provider, { value: t }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", minHeight: "100vh", background: t.bg, width: "100%", overflowX: "hidden" } }, !isMobile && /* @__PURE__ */ React.createElement(
+    Sidebar,
+    {
+      view,
+      setView,
+      theme,
+      setTheme,
+      isMobile: false,
+      collapsed,
+      setCollapsed
+    }
+  ), isMobile && /* @__PURE__ */ React.createElement(
+    Sidebar,
+    {
+      view,
+      setView,
+      theme,
+      setTheme,
+      isMobile: true,
+      mobileOpen,
+      setMobileOpen
+    }
+  ), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column" } }, isMobile && /* @__PURE__ */ React.createElement("div", { style: {
+    position: "sticky",
+    top: 0,
+    zIndex: 5,
+    background: t.bg,
+    borderBottom: `1px solid ${t.border}`,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "12px 14px"
+  } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setMobileOpen(true), title: "Open menu", style: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    gap: 4,
+    width: 34,
+    height: 34,
+    background: "transparent",
+    border: `1px solid ${t.border}`,
+    borderRadius: 9,
+    cursor: "pointer",
+    padding: 0
+  } }, /* @__PURE__ */ React.createElement("span", { style: { display: "block", height: 2, width: 16, margin: "0 auto", background: t.text, borderRadius: 2 } }), /* @__PURE__ */ React.createElement("span", { style: { display: "block", height: 2, width: 16, margin: "0 auto", background: t.text, borderRadius: 2 } }), /* @__PURE__ */ React.createElement("span", { style: { display: "block", height: 2, width: 16, margin: "0 auto", background: t.text, borderRadius: 2 } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 7 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 24, height: 24, borderRadius: 6, background: t.accent, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Icon, { name: "zap", size: 13, color: "#fff", fill: "#fff" })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "Space Grotesk", fontWeight: 700, fontSize: 14.5, color: t.text } }, "Focus To-Do"))), /* @__PURE__ */ React.createElement(IconBtn, { icon: theme === "dark" ? "sun" : "moon", onClick: () => setTheme(theme === "dark" ? "light" : "dark"), title: "Toggle theme" })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, padding: isMobile ? "16px 14px 28px" : 28, overflowY: "auto", minWidth: 0 } }, views[view]))));
+}
+ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(FocusOSApp, null));
+
+</script>
+</body>
+</html>
+    
+
 
 
  
